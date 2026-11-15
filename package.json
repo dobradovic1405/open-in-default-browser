@@ -1,0 +1,120 @@
+{
+  "name": "open-in-default-browser",
+  "displayName": "Open in Default Browser",
+  "description": "Opens HTML, Markdown, SVG, PDF, XML, XSD and JSON files in the default browser, with optional live reload on save.",
+  "version": "1.10.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "html",
+    "markdown",
+    "browser",
+    "preview",
+    "live reload",
+    "open in browser"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "openInDefaultBrowser.open",
+        "title": "Open in Default Browser"
+      },
+      {
+        "command": "openInDefaultBrowser.chooseMode",
+        "title": "Choose Open Mode"
+      }
+    ],
+    "configuration": {
+      "title": "Open in Default Browser",
+      "properties": {
+        "openInDefaultBrowser.mode": {
+          "type": "string",
+          "enum": [
+            "external",
+            "both",
+            "editor"
+          ],
+          "enumDescriptions": [
+            "Open the file in the default browser and close the editor tab.",
+            "Open the file in the default browser and keep it open in the editor.",
+            "Open the file only in the editor. Nothing opens automatically."
+          ],
+          "default": "external",
+          "description": "How supported files are displayed when they are opened."
+        },
+        "openInDefaultBrowser.fileExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "html",
+            "htm",
+            "xhtml",
+            "svg",
+            "pdf",
+            "md",
+            "xml",
+            "xsd",
+            "json"
+          ],
+          "description": "File extensions that are opened in the browser (without the dot). Note: the right-click menu entries only cover the default extensions."
+        },
+        "openInDefaultBrowser.liveReload": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reload the page in the browser when files in its folder change. The folder is served locally via localhost for this."
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "openInDefaultBrowser.open",
+          "when": "resourceExtname =~ /^\\.(html|htm|xhtml|svg|pdf|md|xml|xsd|json)$/",
+          "group": "navigation@10"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "openInDefaultBrowser.open",
+          "when": "resourceExtname =~ /^\\.(html|htm|xhtml|svg|pdf|md|xml|xsd|json)$/",
+          "group": "navigation@10"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "openInDefaultBrowser.open",
+          "when": "resourceExtname =~ /^\\.(html|htm|xhtml|svg|pdf|md|xml|xsd|json)$/",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "openInDefaultBrowser.open",
+          "when": "resourceExtname =~ /^\\.(html|htm|xhtml|svg|pdf|md|xml|xsd|json)$/"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "openInDefaultBrowser.open",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
+        "when": "editorTextFocus && resourceExtname =~ /^\\.(html|htm|xhtml|svg|pdf|md|xml|xsd|json)$/"
+      }
+    ]
+  },
+  "dependencies": {
+    "marked": "18.1.2"
+  }
+}
