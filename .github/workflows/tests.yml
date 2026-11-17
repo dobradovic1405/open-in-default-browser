@@ -1,0 +1,53 @@
+name: Tests
+
+on:
+  # Every push to any branch, and every pull request.
+  push:
+  pull_request:
+
+jobs:
+  test:
+    # Windows: the extension's browser handling is Windows-specific, and the test host is VS Code.
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium for the browser tests
+        run: npx playwright install --with-deps chromium
+
+      # Smoke gate first, then the rest, with the data tests in parallel (see tests/DECISIONS.md).
+      # Downloads VS Code on the first run. The desktop test (OPEN_IN_BROWSER_DESKTOP_TESTS) is
+      # not enabled here: it needs an interactive desktop.
+      - name: Tests
+        run: npm test
+
+      # Checks that the extension can be packaged. vsce is pinned here and is not a dev dependency.
+      - name: Package check
+        run: npx --yes @vscode/vsce@3.9.2 package --out extension-check.vsix
+
+      - name: Quality report
+        if: ${{ !cancelled() }}
+        run: node report/build-report.js
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: quality-report
+          path: report/out/
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

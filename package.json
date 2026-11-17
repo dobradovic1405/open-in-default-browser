@@ -3,9 +3,15 @@
   "displayName": "Open in Default Browser",
   "description": "Opens HTML, Markdown, SVG, PDF, XML, XSD and JSON files in the default browser, with optional live reload on save.",
   "version": "1.10.0",
-  "publisher": "local",
+  "publisher": "denis-obradovic",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dobradovic1405/open-in-default-browser.git"
+  },
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.75.0",
+    "node": ">=20.19.0"
   },
   "categories": [
     "Other"
@@ -116,5 +122,29 @@
   },
   "dependencies": {
     "marked": "18.1.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.6",
+    "@vscode/test-electron": "^2.5.2",
+    "mocha": "^12.0.3",
+    "playwright-core": "^1.64.1"
+  },
+  "scripts": {
+    "test": "node tests/run-all.js",
+    "test:smoke": "node tests/integration/runTests.js --grep @smoke",
+    "test:regression": "node tests/integration/runTests.js --grep @regression",
+    "test:files": "playwright test",
+    "test:unit": "node tests/unit/run-unit.js",
+    "test:extension": "node tests/integration/runTests.js",
+    "test:mutation": "node tests/mutation/run-mutants.js",
+    "test:report": "playwright show-report",
+    "report": "node report/build-report.js",
+    "test:all": "node tests/run-all.js"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.1.4",
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.8"
   }
 }

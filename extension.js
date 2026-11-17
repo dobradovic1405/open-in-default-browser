@@ -2,9 +2,9 @@ const vscode = require('vscode');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const { spawn } = require('child_process');
-const { marked } = require('marked');
+const { isInside, safeDecode, folderId } = require('./lib/paths');
+const { withReload, withTitle, wrapPage, bodyFor } = require('./lib/html');
 
 const DEFAULT_EXTENSIONS = ['html', 'htm', 'xhtml', 'svg', 'pdf', 'md', 'xml', 'xsd', 'json'];
 // Files that are already HTML (served with the reload script injected).
@@ -41,27 +41,6 @@ const MIME = {
 // Only web-relevant files trigger a reload, so large report artifacts (traces, zips) are ignored.
 const RELOAD_GLOB = '**/*.{html,htm,xhtml,css,js,mjs,json,xml,xsd,md,svg,pdf,png,jpg,jpeg,gif,webp,woff,woff2,ttf}';
 const RELOAD_DEBOUNCE_MS = 150;
-
-// Injected into served HTML pages: reloads the page whenever the server reports a file change.
-// Short polls instead of a permanent connection: browsers allow only about 6 open connections per host,
-// so long-lived connections would block new tabs.
-const RELOAD_SNIPPET =
-  "<script>(function(){var page;try{page=decodeURIComponent(location.pathname);}catch(e){page=location.pathname;}var start=null,force=null;function tick(){fetch('/__poll?page='+encodeURIComponent(page),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){if(start===null){start=d.version;force=d.force;}else if(d.version!==start||d.force!==force){location.reload();}}).catch(function(){}).then(function(){setTimeout(tick,1000);});}tick();})();</script>";
-
-const PAGE_STYLE = `
-:root { color-scheme: light dark; --bg: #ffffff; --fg: #1f2328; --muted: #656d76; --code: #f6f8fa; --border: #d0d7de; }
-@media (prefers-color-scheme: dark) { :root { --bg: #0d1117; --fg: #e6edf3; --muted: #8d96a0; --code: #161b22; --border: #30363d; } }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
-body { font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-.markdown { max-width: 900px; margin: 2rem auto; padding: 0 1.25rem; }
-.markdown img { max-width: 100%; }
-.markdown table { border-collapse: collapse; }
-.markdown td, .markdown th { border: 1px solid var(--border); padding: 0.4rem 0.6rem; }
-pre { background: var(--code); padding: 1rem; margin: 1rem; overflow: auto; border-radius: 6px; font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
-.markdown pre code { font: inherit; }
-.fit { display: block; max-width: calc(100% - 2rem); margin: 2rem auto; }
-.full { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
-`;
 
 // Live reload state
 let server = null;
@@ -108,90 +87,6 @@ function isSupportedFile(uri) {
   }
   const ext = path.extname(uri.fsPath).slice(1).toLowerCase();
   return supportedExtensions().includes(ext);
-}
-
-function isInside(child, parent) {
-  return child === parent || child.startsWith(parent + path.sep);
-}
-
-function safeDecode(value) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
-
-function escapeHtml(text) {
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function withReload(html, reload) {
-  if (!reload) {
-    return html;
-  }
-  return html.includes('</body>') ? html.replace('</body>', RELOAD_SNIPPET + '</body>') : html + RELOAD_SNIPPET;
-}
-
-/**
- * Adds a <title> if the HTML has none. Without one, the browser shows the URL as the tab title,
- * and the file could not be matched to its window later.
- */
-function withTitle(html, name) {
-  if (/<title[\s>]/i.test(html)) {
-    return html;
-  }
-  const tag = `<title>${escapeHtml(name)}</title>`;
-  if (/<head[^>]*>/i.test(html)) {
-    return html.replace(/<head[^>]*>/i, (match) => match + tag);
-  }
-  return tag + html;
-}
-
-function wrapPage(name, body) {
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(name)}</title>
-<style>${PAGE_STYLE}</style>
-</head>
-<body>
-${body}
-</body>
-</html>`;
-}
-
-function prettyJson(text) {
-  try {
-    return JSON.stringify(JSON.parse(text), null, 2);
-  } catch {
-    return text;
-  }
-}
-
-/** Builds the page for a Markdown, JSON, XML, SVG or PDF file. */
-function bodyFor(ext, name, rawUrl, text) {
-  switch (ext) {
-    case '.md':
-      return `<article class="markdown">${marked.parse(text)}</article>`;
-    case '.json':
-      return `<pre>${escapeHtml(prettyJson(text))}</pre>`;
-    case '.xml':
-    case '.xsd':
-      return `<pre>${escapeHtml(text)}</pre>`;
-    case '.svg':
-      return `<img class="fit" src="${rawUrl}" alt="${escapeHtml(name)}">`;
-    case '.pdf':
-      return `<embed class="full" src="${rawUrl}" type="application/pdf">`;
-    default:
-      return `<pre>${escapeHtml(text)}</pre>`;
-  }
 }
 
 /** Returns the HTML page for a file, cached until the file changes. */
@@ -331,11 +226,6 @@ function reloadPage(pageName) {
   }
 }
 
-/** Short, stable id for a folder, used in the URL. */
-function folderId(dir) {
-  return crypto.createHash('sha1').update(dir).digest('hex').slice(0, 12);
-}
-
 /** Registers a folder for serving and starts watching it for changes (once per folder). */
 function registerRoot(id, dir) {
   if (roots.has(id)) {
@@ -430,11 +320,15 @@ function startSystemBrowser(url) {
   });
 }
 
+// Test seam: the automated tests replace the browser launch so no real browser opens.
+let browserLauncher = null;
+
 /**
  * Opens a URL in the system's default browser, falling back to VS Code if that fails.
  */
 async function openInBrowser(url) {
-  if (await startSystemBrowser(url)) {
+  const launch = browserLauncher || startSystemBrowser;
+  if (await launch(url)) {
     return true;
   }
 
@@ -522,7 +416,8 @@ function closeBrowserWindows(titles = [...openedTitles]) {
     'function Get-FgTitle {',
     '  $sb = New-Object System.Text.StringBuilder 512',
     '  [void][OidbWin]::GetWindowText([OidbWin]::GetForegroundWindow(), $sb, 512)',
-    '  $sb.ToString()',
+    '  # Edge puts a zero-width space (U+200B) before "Edge" in its title; remove such characters before matching.',
+    '  $sb.ToString() -replace "[\\u200B-\\u200D\\uFEFF]", ""',
     '}',
     'function Is-Target([string]$t) {',
     '  foreach ($x in $targets) { if ($t.StartsWith($x)) { return $true } }',
@@ -583,9 +478,13 @@ function queueDeleted(filePath) {
     deletedTimer = null;
     const batch = deletedQueue;
     deletedQueue = [];
+    deleteBatches += 1;
     closeDeletedFiles(batch);
   }, 500);
 }
+
+// Number of deletion batches handled. Only read by the automated tests.
+let deleteBatches = 0;
 
 /** Closes the browser pages and editor tabs of deleted files. */
 async function closeDeletedFiles(filePaths) {
@@ -705,6 +604,21 @@ function activate(context) {
     }),
     { dispose: () => stopServer() }
   );
+
+  // VS Code hands this object to the automated tests (tests/integration, tests/e2e). Not a public API.
+  return {
+    _test: {
+      setBrowserLauncher(fn) {
+        browserLauncher = fn;
+      },
+      getServerPort() {
+        return serverPort;
+      },
+      getDeleteBatches() {
+        return deleteBatches;
+      },
+    },
+  };
 }
 
 function deactivate() {

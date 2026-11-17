@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="140" viewBox="0 0 320 140">
+  <rect x="5" y="5" width="310" height="130" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="3"/>
+  <circle cx="60" cy="70" r="36" fill="#2563eb"/>
+  <text x="120" y="66" font-family="sans-serif" font-size="18" fill="#1f2328">Testdatei SVG</text>
+  <text x="120" y="92" font-family="sans-serif" font-size="13" fill="#1f2328">tests</text>
+</svg>

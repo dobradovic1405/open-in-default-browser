@@ -14,12 +14,12 @@ Open HTML files in your default browser straight from VS Code, with optional liv
 ### Open a file
 
 - Right-click an HTML file in the Explorer and select **Open in Default Browser**.
-- Or open an HTML file and press `Ctrl+Alt+B` (`Cmd+Alt+B` on macOS).
+- Or open a supported file and press `Ctrl+Alt+B` (`Cmd+Alt+B` on macOS).
 - Or run **Open in Default Browser** from the Command Palette (`Ctrl+Shift+P`).
 
 ### Choose an open mode
 
-Run **Choose HTML Open Mode** from the Command Palette, or change `openInDefaultBrowser.mode` in the settings.
+Run **Choose Open Mode** from the Command Palette, or change `openInDefaultBrowser.mode` in the settings.
 
 | Mode | Behavior |
 | --- | --- |
@@ -55,6 +55,8 @@ Notes:
 ## Known Issues
 
 - Live reload does not detect changes made outside VS Code until the file system watcher reports them. Most editors and tools trigger this reliably.
+- Closing browser tabs of opened pages (on a mode change or when a file is deleted) only works on Windows. It uses PowerShell and sends keys to Chrome, Edge, Brave, or Firefox, and it moves those windows to the foreground while it runs. On macOS and Linux, the pages stay open and must be closed manually.
+- Opening files in the default browser is tested on Windows only. macOS and Linux use `open` and `xdg-open`, which have not been verified.
 
 ## Release Notes
 
@@ -62,4 +64,4 @@ See CHANGELOG.md.
 
 ## License
 
-Not yet specified.
+MIT License. See [LICENSE](LICENSE).

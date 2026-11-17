@@ -1,0 +1,14 @@
+.vscode/**
+.vscode-test/**
+.github/**
+tests/**
+playwright.config.ts
+playwright-report/**
+test-results/**
+node_modules/**
+!node_modules/marked/lib/marked.esm.js
+!node_modules/marked/package.json
+!node_modules/marked/LICENSE
+*.vsix
+.gitignore
+report/**

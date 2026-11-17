@@ -1,0 +1,73 @@
+{
+  "killed": 6,
+  "total": 6,
+  "score": 100,
+  "results": [
+    {
+      "id": "M1",
+      "behaviour": "Mode \"editor\" no longer suppresses the automatic browser open",
+      "status": "killed",
+      "failing": 1,
+      "failedTests": [
+        "mode \"editor\": opening a file does not start the browser",
+        "Open in Default Browser"
+      ],
+      "seconds": 93
+    },
+    {
+      "id": "M2",
+      "behaviour": "Path traversal check removed (files outside the folder can be served)",
+      "status": "killed",
+      "failing": 1,
+      "failedTests": [
+        "refuses to serve files outside the opened folder @regression",
+        "Open in Default Browser"
+      ],
+      "seconds": 92
+    },
+    {
+      "id": "M3",
+      "behaviour": "An open page is never seen as connected (second tab opens instead of reload)",
+      "status": "killed",
+      "failing": 1,
+      "failedTests": [
+        "reloads a page that is already open instead of opening a second tab @regression",
+        "Open in Default Browser"
+      ],
+      "seconds": 94
+    },
+    {
+      "id": "M4",
+      "behaviour": "liveReload setting ignored (reload script always injected)",
+      "status": "killed",
+      "failing": 1,
+      "failedTests": [
+        "injects the reload script only while liveReload is on",
+        "Open in Default Browser"
+      ],
+      "seconds": 93
+    },
+    {
+      "id": "M5",
+      "behaviour": "Deleting a file reloads the open page (should not)",
+      "status": "killed",
+      "failing": 1,
+      "failedTests": [
+        "does not reload the open page when its file is deleted @regression",
+        "Open in Default Browser"
+      ],
+      "seconds": 92
+    },
+    {
+      "id": "M6",
+      "behaviour": "Mode change no longer closes the editor tabs",
+      "status": "killed",
+      "failing": 1,
+      "failedTests": [
+        "closes the text tabs and stops the live-reload server",
+        "Open in Default Browser"
+      ],
+      "seconds": 92
+    }
+  ]
+}

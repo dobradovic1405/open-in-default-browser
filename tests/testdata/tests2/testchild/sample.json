@@ -1,0 +1,13 @@
+{
+  "type": "testdatei-json",
+  "folder": "tests2/testchild",
+  "items": [
+    1,
+    2,
+    3
+  ],
+  "nested": {
+    "ok": true,
+    "name": "sample"
+  }
+}

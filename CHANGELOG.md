@@ -2,6 +2,10 @@
 
 All notable changes to this extension are documented in this file.
 
+## [Unreleased]
+
+- Fixed (Windows): the browser page of a deleted file was not closed when the browser was Microsoft Edge. Edge puts an invisible zero-width space in its window title, which the window check did not expect.
+
 ## [1.10.0]
 
 - XSD files (`.xsd`) are supported. They are shown like XML files (formatted as text) and get live reload. `xsd` is part of the default `openInDefaultBrowser.fileExtensions` list and the right-click, editor title and keybinding entries.
