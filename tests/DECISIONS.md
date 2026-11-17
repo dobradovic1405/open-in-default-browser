@@ -121,6 +121,6 @@ Last updated: 2026-11-16.
 | O2 | Choose the sponsor platform and create the account (D05) | you |
 | O3 | Create the Marketplace publisher with the ID `denis-obradovic` (D02) | you |
 | O4 | Decide whether to pin the VS Code test version (D41) | you |
-| O5 | Commit and push, so CI runs on GitHub for the first time (D42 to D49) | you (approval needed) |
+| O5 | Commit and push, so CI runs on GitHub for the first time (D42 to D49) | done: commit `b2d4aa1` on `main` |
 | O6 | Store report history for trends (D55) | later |
 | O7 | Refactor `extension.js` further: server, watchers and tabs into modules (D57). Helpers and unit tests are done | later |

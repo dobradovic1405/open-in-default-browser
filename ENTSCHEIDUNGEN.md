@@ -132,6 +132,6 @@ Diese Punkte sind in D08 und D09 enthalten. Zusätzlich wurde geprüft:
 | O2 | Sponsor-Plattform wählen und Konto anlegen (D05) | Denis |
 | O3 | Marketplace-Publisher mit ID `denis-obradovic` anlegen (D02) | Denis |
 | O4 | Entscheiden, ob die VS-Code-Testversion gepinnt wird (D41) | Denis |
-| O5 | Commit und Push, damit CI erstmals auf GitHub läuft (D42 bis D49). Braucht Freigabe | Denis |
+| O5 | Commit und Push, damit CI erstmals auf GitHub läuft (D42 bis D49). Erledigt: Commit `b2d4aa1` auf `main` | erledigt |
 | O6 | Report-Historie für Trends speichern (D55) | später |
 | O7 | `extension.js` weiter aufteilen: Server, Watcher und Tabs in Module (D57). Hilfsfunktionen und Unit-Tests sind fertig | später |

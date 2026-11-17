@@ -8,7 +8,7 @@ Stand: 2026-11-17
 
 - VS-Code-Erweiterung „Open in Default Browser“. Öffnet Dateien im Standardbrowser oder in VS Code, mit Live-Reload und Löschbehandlung.
 - Version im CHANGELOG: 1.10.0. Unveröffentlichte Änderung: Edge-Fix unter Windows (Zero-Width-Space im Fenstertitel).
-- Repository liegt auf GitHub, öffentlich. Hauptbranch: `main`. Letzter Commit: `94a4f8d VSCodeExtension to open external browser`.
+- Repository liegt auf GitHub, öffentlich. Hauptbranch: `main`. Letzter Commit: `b2d4aa1 Add test suites, quality report and CI; split helpers into lib/`. Vorher: `94a4f8d VSCodeExtension to open external browser`.
 - Plattform der Entwicklung: Windows 11. Shell im Projekt ist PowerShell, Git Bash ist ebenfalls verfügbar.
 
 ## Stand der Arbeit
@@ -17,7 +17,7 @@ Stand: 2026-11-17
 - Mutationstests nach dem Refactor: 6 von 6 gefunden (100 %). Ergebnis in `tests/mutation/results.json`.
 - Zwei instabile Tests behoben (D58). Vorher schlugen zwei von drei Gesamtläufen fehl.
 - Refactor: Hilfsfunktionen in `lib/paths.js` und `lib/html.js` (D57). `extension.js` importiert sie.
-- Commit und Push auf `main` sind für diesen Stand freigegeben (O5). Nach dem Push steht die Commit-ID in der Entscheidungsliste.
+- Commit und Push auf `main` sind erfolgt (O5, Commit `b2d4aa1`).
 
 ## Arbeitsregeln
 
