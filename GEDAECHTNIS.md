@@ -23,7 +23,7 @@ Stand: 2026-11-17
 
 Diese Regeln stammen aus den Vorgaben der Sitzung. Sie sind nicht in einem Gespräch mit Denis bestätigt worden.
 
-- Antworten an Denis auf Deutsch. Code, Kommentare in Dateien und Testdoku bleiben englisch. Report-Texte sind deutsch (D51).
+- Antworten an Denis auf Deutsch. Code, Kommentare in Dateien und Testdoku bleiben englisch. Report-Texte sind englisch (D59, ersetzt D51).
 - Commits enden mit `Co-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>`. Pull Requests enden mit `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 - Commit und Push nur auf ausdrückliche Anweisung.
 - Entscheidungen werden mit Begründung und verworfenen Alternativen festgehalten, nicht nur als Ergebnis.

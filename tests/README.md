@@ -20,8 +20,21 @@ in the test title, because one test can have several purposes.
 **Unit tests:** `tests/unit/` tests the pure helpers in `lib/paths.js` and `lib/html.js`. The rest of
 `extension.js` (server, watchers, tabs) still needs VS Code and is covered by the integration tests.
 
-**Why `e2e` and not `system`:** the level called "system test" is covered by `e2e/` (the whole extension in
-VS Code, pages in a real browser). The manual cases and the desktop test M-16 belong to the same level. See D56.
+**Test levels, with examples.** The same text is on the quality report (`report/out/report.html`).
+
+| Level | Folder | What it checks | Example |
+| --- | --- | --- | --- |
+| Unit | `unit/` | One small function on its own. No VS Code, no browser | `isInside()` rejects `/work/site-old` when the folder is `/work/site` |
+| Data | `data/` | The test fixtures: sample files exist and are valid | `sample.json` parses as JSON |
+| Integration | `integration/` | Parts working together inside VS Code: commands, local server, file watching, modes | In mode `external` a file opens in the browser and its editor tab closes |
+| System (end-to-end) | `e2e/` | The whole extension, driven as a user would in VS Code, result checked in a real browser | Saving an HTML file reloads the page in the browser |
+| Manual (acceptance) | `manual/` | What a person must judge: menus, visual result, Windows dialogs | The menu entries and the shortcut are shown as documented |
+
+- **System test:** there is no separate `system/` folder. The system level is `e2e/`, which runs the whole
+  extension. It includes the Windows desktop test M-16, which is opt-in (`OPEN_IN_BROWSER_DESKTOP_TESTS=1`).
+- **Smoke and regression are purposes, not levels.** A test can be both, and each can apply to any level.
+- The manual cases are acceptance checks by a person. They are not automated and have their own folder.
+- See D56 (levels) and D60 (glossary on the report) in [DECISIONS.md](DECISIONS.md).
 
 **Purpose tags:** Put `@smoke` or `@regression` in a test title.
 

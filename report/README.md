@@ -1,7 +1,7 @@
 # Quality report
 
-One page for stakeholders: test results, requirement coverage, mutation score, manual status and
-an automation maturity level, in a single HTML file.
+One page for stakeholders: test results, requirement coverage, mutation score, manual status, an
+automation maturity level and an explanation of the test levels, in a single HTML file.
 
 This folder is self-contained (Node.js only, no npm packages, no network). It can be moved to its own
 repository. Point it at the test outputs of any project with the same layout.
@@ -25,26 +25,32 @@ Input files (defaults, relative to the project root):
 | `--plan` | `tests/manual/test-plan.md` | manual results matrix |
 | `--workflow` | `.github/workflows/tests.yml` | CI configuration |
 
-Set `REPORT_ROOT` to use another project root. Missing inputs are shown as zero or "nicht geprüft",
+Set `REPORT_ROOT` to use another project root. Missing inputs are shown as zero or "not checked",
 not as errors.
 
 ## What is on the page
 
 - **Overall status:** red if automated tests fail, yellow if gaps or manual cases are open, green otherwise.
-- **KPI tiles:** tests passed, requirements checked automatically, bugs found by mutation tests, manual cases
-  entered, open gaps, maturity level.
-- **Charts:** requirement status (donut), results per test level and purpose (bars). Levels: Unit, Daten (data), Integration, End-to-End.
+- **KPI tiles:** tests passed, requirements checked automatically, faults caught by mutation tests, manual
+  checks recorded, open gaps, maturity level.
+- **Charts:** requirement status (donut), automated tests by level and purpose (bars).
 - **Maturity ladder:** four levels, each with a rule. The rules are an internal model, not a standard.
+- **Test levels explained:** one line and one example per level, so readers without testing background
+  can follow the charts.
 - **Open gaps:** requirements that are partial, manual only or not checked at all.
+
+## Language
+
+The page is in English (decision D59). The strings are in `build-report.js`.
 
 ## Maturity model
 
 | Level | Name | Rule |
 | --- | --- | --- |
-| 1 | Manuell | A manual test plan exists |
-| 2 | Smoke automatisiert | Smoke tests run automatically and pass |
-| 3 | Regression und Integration | Integration and regression tests exist and at least 50 % of requirements are checked automatically |
-| 4 | Verifiziert | End-to-end tests in a real browser, mutation score of at least 80 %, and the CI pipeline has run |
+| 1 | Manual | A manual test plan exists |
+| 2 | Smoke automated | Smoke tests run automatically and pass |
+| 3 | Regression and integration | Integration and regression tests exist, and at least 50 % of requirements are checked automatically |
+| 4 | Verified | End-to-end tests in a real browser, mutation score of at least 80 %, and the CI pipeline has run |
 
 Level 4 requires `GITHUB_ACTIONS=true`, so a local run never reaches it. This is deliberate.
 

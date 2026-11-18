@@ -40,6 +40,14 @@ const inputs = {
 };
 const outFile = path.resolve(ROOT, argValue('out', 'report/out/report.html'));
 
+// Test levels. The names are used for grouping, so they must match the collect functions below.
+const LAYER = {
+  unit: 'Unit',
+  data: 'Data',
+  integration: 'Integration',
+  system: 'System (end-to-end)',
+};
+
 const readJson = (file) => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null);
 const readText = (file) => (fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null);
 const esc = (value) =>
@@ -54,7 +62,7 @@ function collectPlaywright(json) {
     for (const spec of suite.specs || []) {
       for (const t of spec.tests || []) {
         const duration = (t.results || []).reduce((sum, r) => sum + (r.duration || 0), 0);
-        tests.push({ layer: 'Daten', title: spec.title, status: t.status, duration });
+        tests.push({ layer: LAYER.data, title: spec.title, status: t.status, duration });
       }
     }
     for (const child of suite.suites || []) walk(child);
@@ -69,7 +77,7 @@ function collectPlaywright(json) {
 
 function collectUnit(json) {
   return (json?.results || []).map((r) => ({
-    layer: 'Unit',
+    layer: LAYER.unit,
     title: r.title,
     status: r.status,
     duration: r.duration,
@@ -80,7 +88,7 @@ function collectUnit(json) {
 
 function collectMocha(json) {
   return (json?.results || []).map((r) => ({
-    layer: r.folder === 'e2e' ? 'End-to-End' : 'Integration',
+    layer: r.folder === 'e2e' ? LAYER.system : LAYER.integration,
     title: r.title,
     status: r.status,
     duration: r.duration,
@@ -137,10 +145,10 @@ function collectManual(text) {
 // ---------- maturity model ----------
 
 const MATURITY = [
-  { level: 1, name: 'Manuell', rule: 'Testfälle existieren als Plan (manuell ausführbar)' },
-  { level: 2, name: 'Smoke automatisiert', rule: 'Smoke-Tests laufen automatisch und bestehen' },
-  { level: 3, name: 'Regression und Integration', rule: 'Integrationstests, Regressionstests und mindestens 50 % Anforderungsabdeckung' },
-  { level: 4, name: 'Verifiziert', rule: 'End-to-End im echten Browser, Mutationsscore ab 80 % und die CI-Pipeline lief' },
+  { level: 1, name: 'Manual', rule: 'A manual test plan exists' },
+  { level: 2, name: 'Smoke automated', rule: 'Smoke tests run automatically and pass' },
+  { level: 3, name: 'Regression and integration', rule: 'Integration and regression tests exist, and at least 50 % of requirements are checked automatically' },
+  { level: 4, name: 'Verified', rule: 'End-to-end tests in a real browser, mutation score of at least 80 %, and the CI pipeline has run' },
 ];
 
 function maturity(facts) {
@@ -180,24 +188,25 @@ const duration = Math.round(automated.reduce((s, t) => s + (t.duration || 0), 0)
 const reqCount = { 'auto+manual': 0, automated: 0, partial: 0, manual: 0, none: 0 };
 for (const r of requirements) reqCount[categorize(r.status)] += 1;
 const reqTotal = requirements.length;
-const covered = reqCount['auto+manual'] + reqCount.automated + reqCount.partial;
 const autoCovered = reqCount['auto+manual'] + reqCount.automated;
 const coverage = pct(autoCovered, reqTotal);
 
-const layers = ['Unit', 'Daten', 'Integration', 'End-to-End'].map((name) => {
+const layerOrder = [LAYER.unit, LAYER.data, LAYER.integration, LAYER.system];
+const layers = layerOrder.map((name) => {
   const items = automated.filter((t) => t.layer === name);
   return { name, total: items.length, passed: items.filter((t) => t.status === 'passed').length };
 });
 const smokeTests = automated.filter((t) => t.smoke);
 const smokePass = smokeTests.length > 0 && smokeTests.every((t) => t.status === 'passed');
 const regressionCount = automated.filter((t) => t.regression).length;
+const layerOf = (name) => layers.find((l) => l.name === name);
 
 const facts = {
   manualPlanExists: manual.total > 0,
   smokePass,
-  integrationAndRegression: layers[2].total > 0 && regressionCount > 0,
+  integrationAndRegression: layerOf(LAYER.integration).total > 0 && regressionCount > 0,
   coverage,
-  e2e: layers[3].total > 0,
+  e2e: layerOf(LAYER.system).total > 0,
   mutationScore: mutation.score,
   ci,
 };
@@ -208,10 +217,10 @@ const survivors = (mutation.results || []).filter((m) => m.status === 'survived'
 
 // Overall status: red = failing tests; yellow = gaps or manual cases open; green otherwise.
 const overall =
-  failed > 0 ? { key: 'red', text: 'Nicht freigabefähig: automatisierte Tests schlagen fehl' }
+  failed > 0 ? { key: 'red', text: 'Not ready for release: automated tests are failing' }
   : manual.done < manual.total || gaps.length > 0 || survivors.length > 0
-    ? { key: 'yellow', text: 'Automatisierte Tests grün. Offene Punkte vor Freigabe prüfen' }
-    : { key: 'green', text: 'Grün: alle Tests bestanden, keine offenen Punkte' };
+    ? { key: 'yellow', text: 'Automated tests pass. Check the open items before release' }
+    : { key: 'green', text: 'Green: all tests passed, no open items' };
 
 // ---------- SVG charts ----------
 
@@ -229,10 +238,10 @@ function donut(parts, total) {
       return arc;
     })
     .join('');
-  return `<svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="Anforderungsstatus">
+  return `<svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="Requirement status">
     <circle r="${r}" cx="70" cy="70" fill="none" stroke="#e5e7eb" stroke-width="22"/>${arcs}
     <text x="70" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">${coverage}%</text>
-    <text x="70" y="86" text-anchor="middle" font-size="11" fill="#6b7280">automatisiert</text></svg>`;
+    <text x="70" y="86" text-anchor="middle" font-size="11" fill="#6b7280">automated</text></svg>`;
 }
 
 function bar(label, value, max, color, caption) {
@@ -245,11 +254,11 @@ function bar(label, value, max, color, caption) {
 // ---------- HTML ----------
 
 const legend = [
-  ['auto+manual', 'Automatisiert + manuell', '#15803d', reqCount['auto+manual']],
-  ['automated', 'Automatisiert', '#4ade80', reqCount.automated],
-  ['partial', 'Teilweise', '#facc15', reqCount.partial],
-  ['manual', 'Nur manuell', '#60a5fa', reqCount.manual],
-  ['none', 'Ungeprüft', '#ef4444', reqCount.none],
+  ['auto+manual', 'Automated + manual', '#15803d', reqCount['auto+manual']],
+  ['automated', 'Automated', '#4ade80', reqCount.automated],
+  ['partial', 'Partial', '#facc15', reqCount.partial],
+  ['manual', 'Manual only', '#60a5fa', reqCount.manual],
+  ['none', 'Not checked', '#ef4444', reqCount.none],
 ]
   .map(([, label, color, n]) => `<li><span class="dot" style="background:${color}"></span>${label}: <b>${n}</b></li>`)
   .join('');
@@ -263,18 +272,55 @@ const maturityRows = MATURITY.map((m, i) => {
 
 const gapRows = gaps
   .map((g) => `<tr><td>${esc(g.id)}</td><td>${esc(g.requirement)}</td><td>${esc(g.status)}</td></tr>`)
-  .join('') || '<tr><td colspan="3">Keine offenen Lücken</td></tr>';
+  .join('') || '<tr><td colspan="3">No open gaps</td></tr>';
+
+// Short explanation of each level for readers who do not know the terms.
+const TEST_LEVELS = [
+  {
+    level: LAYER.unit,
+    folder: 'tests/unit',
+    checks: 'One small function on its own. No VS Code and no browser',
+    example: 'isInside() rejects /work/site-old when the folder is /work/site',
+  },
+  {
+    level: LAYER.data,
+    folder: 'tests/data',
+    checks: 'The test fixtures themselves: sample files exist and are valid',
+    example: 'sample.json parses as JSON',
+  },
+  {
+    level: LAYER.integration,
+    folder: 'tests/integration',
+    checks: 'Parts working together inside VS Code: commands, local server, file watching, open modes',
+    example: 'In mode "external" a file opens in the browser and its editor tab closes',
+  },
+  {
+    level: LAYER.system,
+    folder: 'tests/e2e',
+    checks: 'The whole extension, driven as a user would in VS Code, with the result checked in a real Chromium page',
+    example: 'Saving an HTML file reloads the page in the browser',
+  },
+  {
+    level: 'Manual (acceptance)',
+    folder: 'tests/manual',
+    checks: 'What a person has to judge: menus, visual result, Windows dialogs',
+    example: 'The menu entries and the shortcut are shown as documented',
+  },
+];
+const levelRows = TEST_LEVELS.map(
+  (l) => `<tr><td><b>${esc(l.level)}</b></td><td><code>${esc(l.folder)}</code></td><td>${esc(l.checks)}</td><td>${esc(l.example)}</td></tr>`
+).join('');
 
 const kpi = (value, label, note) =>
   `<div class="kpi"><div class="kpi-value">${value}</div><div class="kpi-label">${esc(label)}</div><div class="kpi-note">${esc(note)}</div></div>`;
 
 const today = new Date().toISOString().slice(0, 10);
 const html = `<!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Qualitätsbericht ${esc(pkg.displayName || pkg.name || '')}</title>
+<title>Quality report ${esc(pkg.displayName || pkg.name || '')}</title>
 <style>
   :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#f9fafb; --card:#ffffff; }
   @media (prefers-color-scheme: dark) {
@@ -297,10 +343,11 @@ const html = `<!doctype html>
   .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
   @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .wide { margin-top:12px; }
   .chart { display:flex; gap:16px; align-items:center; }
   ul.legend, ul.ladder { list-style:none; padding:0; margin:0; }
   .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
-  .bar { display:grid; grid-template-columns: 110px 1fr 90px; gap:8px; align-items:center; margin: 8px 0; font-size:13px; }
+  .bar { display:grid; grid-template-columns: 170px 1fr 90px; gap:8px; align-items:center; margin: 8px 0; font-size:13px; }
   .bar-track { background:var(--line); border-radius:6px; height:12px; overflow:hidden; }
   .bar-fill { height:100%; }
   .bar-value { text-align:right; color:var(--muted); }
@@ -317,49 +364,58 @@ const html = `<!doctype html>
 </head>
 <body>
 <main>
-  <h1>Qualitätsbericht: ${esc(pkg.displayName || pkg.name || 'Projekt')}</h1>
-  <div class="meta">Version ${esc(pkg.version || '?')} · Stand ${today} · Reifegrad ${mat.level} von 4</div>
+  <h1>Quality report: ${esc(pkg.displayName || pkg.name || 'Project')}</h1>
+  <div class="meta">Version ${esc(pkg.version || '?')} · As of ${today} · Automation maturity level ${mat.level} of 4</div>
 
   <div class="status ${overall.key}">${esc(overall.text)}</div>
 
   <div class="kpis">
-    ${kpi(`${passed} / ${automated.length}`, 'Automatisierte Tests bestanden', `${failed} fehlgeschlagen, ${skipped} übersprungen, ${duration} s`)}
-    ${kpi(`${coverage} %`, 'Anforderungen automatisch geprüft', `${autoCovered} von ${reqTotal} Anforderungen`)}
-    ${kpi(`${mutation.score} %`, 'Fehler gefunden (Mutationstests)', `${mutation.killed} von ${mutation.total} absichtlichen Fehlern`)}
-    ${kpi(`${manual.done} / ${manual.total}`, 'Manuelle Prüfungen eingetragen', `${manual.failed} Fehler gemeldet`)}
-    ${kpi(`${gaps.length}`, 'Offene Lücken', 'teilweise, nur manuell oder ungeprüft')}
-    ${kpi(`${mat.level} / 4`, 'Reifegrad der Automatisierung', MATURITY[mat.level - 1]?.name || 'noch nicht erreicht')}
+    ${kpi(`${passed} / ${automated.length}`, 'Automated tests passed', `${failed} failed, ${skipped} skipped, ${duration} s`)}
+    ${kpi(`${coverage} %`, 'Requirements checked automatically', `${autoCovered} of ${reqTotal} requirements`)}
+    ${kpi(`${mutation.score} %`, 'Faults caught (mutation tests)', `${mutation.killed} of ${mutation.total} deliberate faults`)}
+    ${kpi(`${manual.done} / ${manual.total}`, 'Manual checks recorded', `${manual.failed} failures reported`)}
+    ${kpi(`${gaps.length}`, 'Open gaps', 'partial, manual only or not checked')}
+    ${kpi(`${mat.level} / 4`, 'Automation maturity', MATURITY[mat.level - 1]?.name || 'not reached yet')}
   </div>
 
   <div class="grid">
     <section class="card">
-      <h2>Anforderungen nach Prüfart</h2>
+      <h2>Requirements by check type</h2>
       <div class="chart">${donut(reqCount, reqTotal || 1)}<ul class="legend">${legend}</ul></div>
     </section>
     <section class="card">
-      <h2>Automatisierte Tests nach Ebene</h2>
+      <h2>Automated tests by level</h2>
       ${layers.map((l) => bar(l.name, l.passed, l.total || 1, '#15803d', `${l.passed} / ${l.total}`)).join('')}
       ${bar('Smoke', smokeTests.filter((t) => t.status === 'passed').length, smokeTests.length || 1, '#2563eb', `${smokeTests.filter((t) => t.status === 'passed').length} / ${smokeTests.length}`)}
       ${bar('Regression', automated.filter((t) => t.regression && t.status === 'passed').length, regressionCount || 1, '#7c3aed', `${automated.filter((t) => t.regression && t.status === 'passed').length} / ${regressionCount}`)}
-      ${bar('Fehler gefunden', mutation.killed, mutation.total || 1, '#0d9488', `${mutation.killed} / ${mutation.total}`)}
-      ${bar('Manuell eingetragen', manual.done, manual.total || 1, '#60a5fa', `${manual.done} / ${manual.total}`)}
+      ${bar('Faults caught', mutation.killed, mutation.total || 1, '#0d9488', `${mutation.killed} / ${mutation.total}`)}
+      ${bar('Manual checks recorded', manual.done, manual.total || 1, '#60a5fa', `${manual.done} / ${manual.total}`)}
     </section>
     <section class="card">
-      <h2>Reifegrad der Automatisierung</h2>
+      <h2>Automation maturity</h2>
       <ul class="ladder">${maturityRows}</ul>
-      <p class="meta">Die Stufen sind eine Einschätzung auf Basis der oben genannten Kennzahlen, kein Industriestandard.</p>
+      <p class="meta">The levels are an assessment based on the metrics above, not an industry standard.</p>
     </section>
     <section class="card">
-      <h2>Offene Lücken</h2>
-      <table><thead><tr><th>ID</th><th>Anforderung</th><th>Status</th></tr></thead><tbody>${gapRows}</tbody></table>
+      <h2>Open gaps</h2>
+      <table><thead><tr><th>ID</th><th>Requirement</th><th>Status</th></tr></thead><tbody>${gapRows}</tbody></table>
     </section>
   </div>
 
+  <section class="card wide">
+    <h2>Test levels explained</h2>
+    <table>
+      <thead><tr><th>Level</th><th>Folder</th><th>What it checks</th><th>Example</th></tr></thead>
+      <tbody>${levelRows}</tbody>
+    </table>
+    <p class="meta">Smoke and regression are not levels. They are purposes that can apply to any level: smoke tests are a quick check that the basics work, regression tests guard against bugs that were fixed before.</p>
+  </section>
+
   <p class="foot">
-    Quellen: Playwright- und Mocha-Ergebnisse der letzten Läufe, Mutationsergebnisse (<code>tests/mutation/results.json</code>),
-    Anforderungsmatrix (<code>tests/traceability.md</code>), manueller Testplan (<code>tests/manual/test-plan.md</code>).
-    CI: ${ci ? 'lief in GitHub Actions' : ciConfigured ? 'konfiguriert, Lauf auf GitHub nicht geprüft' : 'nicht konfiguriert'}.
-    Erzeugt mit <code>report/build-report.js</code>.
+    Sources: Playwright and Mocha results of the latest runs, mutation results (<code>tests/mutation/results.json</code>),
+    requirement matrix (<code>tests/traceability.md</code>), manual test plan (<code>tests/manual/test-plan.md</code>).
+    CI: ${ci ? 'ran in GitHub Actions' : ciConfigured ? 'configured, run on GitHub not checked' : 'not configured'}.
+    Generated by <code>report/build-report.js</code>.
   </p>
 </main>
 </body>
@@ -373,18 +429,18 @@ console.log(`Report written: ${outFile}`);
 // ---------- GitHub Actions summary ----------
 
 if (process.env.GITHUB_STEP_SUMMARY) {
-  const summary = `## Qualitätsbericht
+  const summary = `## Quality report
 
 **${overall.text}**
 
-| Kennzahl | Wert |
+| Metric | Value |
 | --- | --- |
-| Automatisierte Tests bestanden | ${passed} / ${automated.length} |
-| Anforderungen automatisch geprüft | ${coverage} % (${autoCovered} / ${reqTotal}) |
-| Fehler gefunden (Mutationstests) | ${mutation.score} % |
-| Manuelle Prüfungen eingetragen | ${manual.done} / ${manual.total} |
-| Offene Lücken | ${gaps.length} |
-| Reifegrad | ${mat.level} / 4 |
+| Automated tests passed | ${passed} / ${automated.length} |
+| Requirements checked automatically | ${coverage} % (${autoCovered} / ${reqTotal}) |
+| Faults caught (mutation tests) | ${mutation.score} % |
+| Manual checks recorded | ${manual.done} / ${manual.total} |
+| Open gaps | ${gaps.length} |
+| Maturity level | ${mat.level} / 4 |
 `;
   fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
 }
