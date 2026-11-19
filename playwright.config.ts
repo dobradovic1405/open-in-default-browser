@@ -5,7 +5,7 @@ import { defineConfig } from '@playwright/test';
  *
  * Test layout:
  *   tests/unit/         Mocha in plain Node: pure helpers in lib/ (npm run test:unit)
- *   tests/data/         Playwright: checks the sample files (npm run test:files)
+ *   tests/fixtures/     Playwright: checks the sample files in testdata/ (npm run test:fixtures)
  *   tests/integration/  Mocha inside VS Code: extension behaviour (npm run test:extension)
  *   tests/e2e/          Mocha inside VS Code + Chromium/Edge: pages in a real browser (npm run test:extension)
  *   tests/manual/       Manual test plan for behaviour that needs VS Code (not automated)
@@ -15,7 +15,7 @@ import { defineConfig } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './tests/data',
+  testDir: './tests/fixtures',
   testMatch: '**/*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

@@ -120,6 +120,20 @@ describe('Served pages in Chromium', function () {
     }
   });
 
+  it('shows an XSD file as its source text in the page @regression', async () => {
+    // The extension wraps XSD files in <pre>. Check that the schema text is visible, not only the HTTP status.
+    const url = await openWithCommand(sample('root', 'xsd'));
+    const page = await browser.newPage();
+    try {
+      await page.goto(url);
+      const shown = await page.locator('pre').textContent();
+      assert.ok(shown.includes('<xs:schema'), 'the schema element is shown');
+      assert.ok(shown.includes('<xs:element name="note">'), 'the note element is shown');
+    } finally {
+      await page.close();
+    }
+  });
+
   it('reloads the page in Chromium after the file is saved', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'open-in-browser-chrome-reload-'));
     const page = await browser.newPage();

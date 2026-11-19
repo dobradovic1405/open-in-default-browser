@@ -4,6 +4,7 @@
 tests/**
 playwright.config.ts
 playwright-report/**
+docs/**
 test-results/**
 node_modules/**
 !node_modules/marked/lib/marked.esm.js
@@ -12,3 +13,4 @@ node_modules/**
 *.vsix
 .gitignore
 report/**
+docs/**

@@ -43,7 +43,7 @@ const outFile = path.resolve(ROOT, argValue('out', 'report/out/report.html'));
 // Test levels. The names are used for grouping, so they must match the collect functions below.
 const LAYER = {
   unit: 'Unit',
-  data: 'Data',
+  fixtures: 'Fixtures',
   integration: 'Integration',
   system: 'System (end-to-end)',
 };
@@ -62,7 +62,7 @@ function collectPlaywright(json) {
     for (const spec of suite.specs || []) {
       for (const t of spec.tests || []) {
         const duration = (t.results || []).reduce((sum, r) => sum + (r.duration || 0), 0);
-        tests.push({ layer: LAYER.data, title: spec.title, status: t.status, duration });
+        tests.push({ layer: LAYER.fixtures, title: spec.title, status: t.status, duration });
       }
     }
     for (const child of suite.suites || []) walk(child);
@@ -191,7 +191,7 @@ const reqTotal = requirements.length;
 const autoCovered = reqCount['auto+manual'] + reqCount.automated;
 const coverage = pct(autoCovered, reqTotal);
 
-const layerOrder = [LAYER.unit, LAYER.data, LAYER.integration, LAYER.system];
+const layerOrder = [LAYER.unit, LAYER.fixtures, LAYER.integration, LAYER.system];
 const layers = layerOrder.map((name) => {
   const items = automated.filter((t) => t.layer === name);
   return { name, total: items.length, passed: items.filter((t) => t.status === 'passed').length };
@@ -283,9 +283,9 @@ const TEST_LEVELS = [
     example: 'isInside() rejects /work/site-old when the folder is /work/site',
   },
   {
-    level: LAYER.data,
-    folder: 'tests/data',
-    checks: 'The test fixtures themselves: sample files exist and are valid',
+    level: LAYER.fixtures,
+    folder: 'tests/fixtures',
+    checks: 'The sample files that the other tests use: they exist and are valid. Not a test of the extension',
     example: 'sample.json parses as JSON',
   },
   {

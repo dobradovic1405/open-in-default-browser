@@ -24,7 +24,7 @@ jobs:
       - name: Install Chromium for the browser tests
         run: npx playwright install --with-deps chromium
 
-      # Smoke gate first, then the rest, with the data tests in parallel (see tests/DECISIONS.md).
+      # Smoke gate first, then the rest, with the data tests in parallel (see docs/DECISIONS.md).
       # Downloads VS Code on the first run. The desktop test (OPEN_IN_BROWSER_DESKTOP_TESTS) is
       # not enabled here: it needs an interactive desktop.
       - name: Tests

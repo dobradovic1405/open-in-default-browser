@@ -7,7 +7,7 @@ in the test title, because one test can have several purposes.
 
 | Folder | Level | What it checks | Runs with | Command |
 | --- | --- | --- | --- | --- |
-| `data/` | data check | The sample files in `testdata/` exist and have the right format | Playwright | `npm run test:files` |
+| `fixtures/` | fixture check | The sample files in `testdata/` exist and have the right format. Not a test of the extension | Playwright | `npm run test:fixtures` |
 | `unit/` | unit | Pure helpers in `lib/` (paths, HTML pages): no VS Code, no browser | Mocha in plain Node | `npm run test:unit` |
 | `integration/` | integration | The extension inside VS Code: commands, HTTP server, file watching, open modes | Mocha in VS Code | `npm run test:extension` |
 | `e2e/` | end to end | Pages that the extension serves, shown in a real browser (Chromium, Edge) | Mocha in VS Code + Playwright | `npm run test:extension` |
@@ -25,7 +25,7 @@ in the test title, because one test can have several purposes.
 | Level | Folder | What it checks | Example |
 | --- | --- | --- | --- |
 | Unit | `unit/` | One small function on its own. No VS Code, no browser | `isInside()` rejects `/work/site-old` when the folder is `/work/site` |
-| Data | `data/` | The test fixtures: sample files exist and are valid | `sample.json` parses as JSON |
+| Fixtures | `fixtures/` | The sample files the other tests use: they exist and are valid. Not a test of the extension | `sample.json` parses as JSON |
 | Integration | `integration/` | Parts working together inside VS Code: commands, local server, file watching, modes | In mode `external` a file opens in the browser and its editor tab closes |
 | System (end-to-end) | `e2e/` | The whole extension, driven as a user would in VS Code, result checked in a real browser | Saving an HTML file reloads the page in the browser |
 | Manual (acceptance) | `manual/` | What a person must judge: menus, visual result, Windows dialogs | The menu entries and the shortcut are shown as documented |
@@ -34,7 +34,7 @@ in the test title, because one test can have several purposes.
   extension. It includes the Windows desktop test M-16, which is opt-in (`OPEN_IN_BROWSER_DESKTOP_TESTS=1`).
 - **Smoke and regression are purposes, not levels.** A test can be both, and each can apply to any level.
 - The manual cases are acceptance checks by a person. They are not automated and have their own folder.
-- See D56 (levels) and D60 (glossary on the report) in [DECISIONS.md](DECISIONS.md).
+- See D56 (levels) and D60 (glossary on the report) in [docs/DECISIONS.md](../docs/DECISIONS.md).
 
 **Purpose tags:** Put `@smoke` or `@regression` in a test title.
 
@@ -43,7 +43,7 @@ in the test title, because one test can have several purposes.
 | `@smoke` | Fast check of the basic function: activation, commands, one page served, one mode | `npm run test:smoke` |
 | `@regression` | Tests for earlier bugs and risky behaviour (see CHANGELOG) | `npm run test:regression` |
 
-`npm test` runs everything in this order: smoke gate first (VS Code), then the rest (VS Code). The data tests (Playwright) and the unit tests run in parallel. If the smoke gate fails, the rest is skipped. See [DECISIONS.md](DECISIONS.md) for the reasons.
+`npm test` runs everything in this order: smoke gate first (VS Code), then the rest (VS Code). The data tests (Playwright) and the unit tests run in parallel. If the smoke gate fails, the rest is skipped. See [docs/DECISIONS.md](../docs/DECISIONS.md) for the reasons.
 
 ## Requirements
 
@@ -77,7 +77,7 @@ npm test            # runs both groups
 
 ## Reports
 
-- **Playwright** (`data/`): HTML report in `playwright-report/`. Open with `npm run test:report`.
+- **Playwright** (`fixtures/`, `e2e/`): HTML report in `playwright-report/`. Open with `npm run test:report`.
 - **Mocha** (`integration/`, `e2e/`): results in the console only.
 
 ## Mutation tests

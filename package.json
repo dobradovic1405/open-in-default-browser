@@ -134,7 +134,7 @@
     "test": "node tests/run-all.js",
     "test:smoke": "node tests/integration/runTests.js --grep @smoke",
     "test:regression": "node tests/integration/runTests.js --grep @regression",
-    "test:files": "playwright test",
+    "test:fixtures": "playwright test",
     "test:unit": "node tests/unit/run-unit.js",
     "test:extension": "node tests/integration/runTests.js",
     "test:mutation": "node tests/mutation/run-mutants.js",

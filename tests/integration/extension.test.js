@@ -337,9 +337,17 @@ describe('Open in Default Browser', function () {
       const old = new URL(launched.find((u) => u.endsWith('/sample.xml')));
 
       await setMode('editor');
-
-      assert.strictEqual(hasTab(uri), false, 'text tab is closed');
-      await assert.rejects(httpGet(old.port, old.pathname), 'the old server no longer answers');
+      // The handler closes tabs and then stops the server. Under load this can take longer than setMode waits,
+      // so poll for both results instead of checking once.
+      await waitFor(() => !hasTab(uri), 'text tab to close', 15000);
+      await waitFor(async () => {
+        try {
+          await httpGet(old.port, old.pathname);
+          return false;
+        } catch {
+          return true;
+        }
+      }, 'the old server to stop answering', 15000);
     });
   });
 

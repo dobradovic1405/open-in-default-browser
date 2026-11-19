@@ -1,9 +1,9 @@
 # Entscheidungen (Deutsch)
 
 Übersicht aller Entscheidungen zu Tests, Repository, CI und Reporting, mit Begründung und verworfenen Alternativen.
-Die vollständige englische Tabelle mit Status steht in [tests/DECISIONS.md](tests/DECISIONS.md). Bei Widersprüchen gilt diese Datei als Quelle, die Nummern (D01 bis D55) sind identisch.
+Die vollständige englische Tabelle mit Status steht in [DECISIONS.md](DECISIONS.md). Bei Widersprüchen gilt diese Datei als Quelle, die Nummern (D01 bis D55) sind identisch.
 
-Stand: 2026-11-16
+Stand: 2026-11-18
 
 Status: **entschieden** = gilt. **offen** = noch zu entscheiden oder zu tun.
 
@@ -119,10 +119,12 @@ Status: **entschieden** = gilt. **offen** = noch zu entscheiden oder zu tun.
 | D58 | Zwei instabile Tests wurden behoben. (a) Die `beforeEach` der VS-Code-Tests wartet bei geändertem Modus auf den Handler (`setMode`). Der Handler stoppt den Server Sekunden später, und das traf den nächsten Test. (b) Der Chromium-Reload-Test wertet eine zerstörte Seitenkontext-Ausführung während der Prüfung als den Reload, auf den er wartet, und prüft danach den Marker erneut | Beide Ursachen wurden vor dem Fix in Logs gefunden. Danach drei volle Läufe in Folge grün (vorher zwei von drei fehlgeschlagen) | Tests wiederholen (verdeckt die Ursache); längere feste Wartezeiten (langsamer und trotzdem wacklig) | entschieden |
 | D59 | Der Qualitätsbericht und seine Texte sind englisch. Ersetzt D51 | Der Eigentümer wollte eine einheitliche Sprache im Bericht. Repository und Doku sind englisch | deutsche Beschriftung mit englischen Inhalten (gemischt, wie bisher) | entschieden am 2026-11-18 |
 | D60 | Der Bericht und `tests/README.md` erklären jede Testebene in einer Zeile mit einem Beispiel. Smoke und Regression werden als Zweck gezeigt, nicht als Ebene | Leser des Ein-Seiten-Berichts brauchen die Bedeutung jedes Balkens. Die README enthält die vollständige Ordnerzuordnung | nur die README (Stakeholder öffnen sie nicht); nur der Bericht (Entwickler brauchen die Ordnerzuordnung); eigene Glossar-Seite (eine Stelle mehr zu pflegen) | entschieden |
+| D61 | Testordner `data/` heißt jetzt `fixtures/`. Er prüft die Beispieldateien, die die anderen Tests nutzen, nicht die Erweiterung. Im Report heißt die Ebene "Fixtures" | "data" klang nach Datentests, und im Mocha-Sinn nach Modultests ("unit"). Der neue Name sagt, was geprüft wird. Die Beispieldateien bleiben in `testdata/` | auch `testdata/` umbenennen (mehr Aufwand, D21 behält die Fixtures an Ort und Stelle); `data/` behalten (irreführend) | entschieden. Ersetzt den Ordnernamen in D16 |
+| D62 | Repo-Struktur: übergreifende Dokumente in `docs/` (Entscheidungen, Projektnotizen). Sie sind über `.vscodeignore` vom Paket ausgeschlossen. Testdoku bleibt in `tests/`, der Report in `report/` | Die internen Notizen lagen im Projektstamm und im Paket. Der deutsche Text gehört nicht in den Marketplace | im Stamm lassen (dann im Paket); alles nach `tests/` (Entscheidungen betreffen nicht nur Tests) | entschieden |
  und den Test-Hooks
 
 Diese Punkte sind in D08 und D09 enthalten. Zusätzlich wurde geprüft:
-- `npm run test:files` (Playwright, Datentests): 40 von 40 bestanden.
+- `npm run test:fixtures` (Playwright, Fixture-Prüfungen): 40 von 40 bestanden.
 - `npm run test:smoke` (VS Code, Smoke-Gate): 5 von 5 bestanden.
 - Nicht geprüft: vollständiger `test:extension`-Lauf, Mutationstests, der manuelle Edge-Test M-16.
 
